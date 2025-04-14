@@ -35,6 +35,8 @@ connection = mysql.connector.connect(user = 'root', database = 'bankapp', passwo
 cursor = connection.cursor()
 
 cursor.execute("DELETE FROM account")
+cursor.execute("DELETE FROM balance")
+
 addData = "INSERT INTO account(userName, password, email) VALUES ('dogs', 'ilovedogs', 'dog@gmail.com');"
 cursor.execute(addData)
 cursor.execute("INSERT INTO account(userName, password, email) VALUES ('LuckyDucky', 'Wong', 'lucky@gmail.com')")
@@ -51,6 +53,13 @@ email = ""
 balanceID = 3000
 
 def viewAccount():
+    cursor.execute("SELECT * FROM balance")
+    print("ID   DATE    DESC    DEPOSIT   WITHDRAWAL")
+    for item in cursor:
+        print(item)
+
+
+def viewAccountBalance():
     if hasAccount():
         print("----------------------")
         print("Your balance: " + str(balance))
@@ -61,17 +70,19 @@ def deposit():
         deposit = input("How much would you like to deposit? ")
         desc = input("What would you like to add as the description for this deposit? ")
         today = datetime.date.today()
+        global balanceID
         balanceID += 1
-        addDeposit = "INSERT INTO balance(idBalance, date, description, deposit) VALUES ('" + balanceID + "', '" + today + "', '" + desc+"', '" + True + "')"
+        addDeposit = "INSERT INTO balance(idBalance, date, description, deposit, withdrawal) VALUES (" + str(balanceID) + ", '" + today.strftime("%x") + "', '" + desc+"', 1, 0)"
         cursor.execute(addDeposit)
+        global balance 
         balance += int(deposit)
-        viewAccount()
+        viewAccountBalance()
 
 def withdrawal():
     if hasAccount():
         withdraw = input("How much would you like to withdraw? ")
         balance -= withdraw
-        viewAccount()
+        viewAccountBalance()
 
 def createAccount():
     print("\nWelcome! To create a new account, please enter the following information... ")
@@ -121,18 +132,22 @@ while True:
 
     if choice == "1":
         viewAccount()
+        #connection.commit()
     elif choice == "2": 
         deposit()
+        connection.commit()
     elif choice == "3": 
         withdrawal()
+        connection.commit()
     elif choice == "4": 
         createAccount()
+        connection.commit()
     elif choice == "5": 
         deleteAccount()
+        connection.commit()
     elif choice == "6": 
         modifyAccount()
-    print(uName)
-
+        connection.commit()
 
 cursor.close()
 connection.close()
