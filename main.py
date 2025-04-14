@@ -26,21 +26,44 @@ choice5.pack()
 window.mainloop()
 
 """
+import datetime
+
+import mysql.connector
+
+connection = mysql.connector.connect(user = 'root', database = 'bankapp', password = 'Wong2021!')
+
+cursor = connection.cursor()
+
+cursor.execute("DELETE FROM account")
+addData = "INSERT INTO account(userName, password, email) VALUES ('dogs', 'ilovedogs', 'dog@gmail.com');"
+cursor.execute(addData)
+cursor.execute("INSERT INTO account(userName, password, email) VALUES ('LuckyDucky', 'Wong', 'lucky@gmail.com')")
+cursor.execute("INSERT INTO account(userName, password, email) VALUES ('batman', 'bat', 'bat@gmail.com')")
+
+connection.commit()
+
+
+
 balance = 0
 uName = ""
 pWord = ""
 email = "" 
+balanceID = 3000
 
 def viewAccount():
     if hasAccount():
         print("----------------------")
-        print("Your balance: " + balance)
+        print("Your balance: " + str(balance))
         print("----------------------")
-
 
 def deposit():
     if hasAccount():
         deposit = input("How much would you like to deposit? ")
+        desc = input("What would you like to add as the description for this deposit? ")
+        today = datetime.date.today()
+        balanceID += 1
+        addDeposit = "INSERT INTO balance(idBalance, date, description, deposit) VALUES ('" + balanceID + "', '" + today + "', '" + desc+"', '" + True + "')"
+        cursor.execute(addDeposit)
         balance += int(deposit)
         viewAccount()
 
@@ -55,25 +78,30 @@ def createAccount():
     uName = input("New username: ")
     pWord = input("Password: ")
     email = input("Email: ")
+    addUser = "INSERT INTO account(userName, password, email) VALUES ('" + uName + "', '" +pWord+"', '"+ email+"')"
+    print(addUser)
+    print(uName)
+    cursor.execute(addUser)
+    connection.commit()
     print("You've successfully created a new account!")
 
 def deleteAccount():
     if hasAccount():
         confirmation = input("Are you sure you want to delete your account? (y)")
-        if confirmation.upper == "y":
+        if confirmation.upper == "Y":
             print("Deleted")
 
 def modifyAccount():
     if hasAccount():
         print("Username: " + uName)
-        for i in len(pWord):
-            password += "*"
-        print("Password: " + password)
+        # for i in pWord:
+        #     password += "*"
+        print("Password: " + pWord)
         print("Email: " + email)
         choice = input("What would you like to modify? ")
 
 def hasAccount():
-    if uName == "":
+    if uName is None:
         print("You don't have an account yet. Please choose option 4 to create an account to get started.")
         return False
     else:
@@ -81,6 +109,7 @@ def hasAccount():
     
 print("Welcome to your bank account!")
 while True:
+
     print("\nCaitlin's bank -------------")
     print("1) View account balance")
     print("2) Make a deposit")
@@ -104,3 +133,6 @@ while True:
         modifyAccount()
     print(uName)
 
+
+cursor.close()
+connection.close()
