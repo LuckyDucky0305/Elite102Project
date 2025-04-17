@@ -115,6 +115,21 @@ def deleteAccount():
             email = ""
             print("Successfully removed your account")
 
+def logIn():
+    username = input("Enter your username: ")
+    password = input("Enter your password: ")
+    global uName, pWord, email
+    cursor.execute("SELECT userName, password, email FROM account WHERE userName = %s AND password = %s", (username, password))
+    result = cursor.fetchone()
+    if result:
+        uName, pWord, email = result
+        print("Successfully signed into " + uName + "'s account")
+    else:
+        print("That didn't seem to work.")
+        # handle case where login failed
+
+
+
 def modifyAccount():
     if hasAccount():
         global uName
@@ -155,16 +170,31 @@ def hasAccount():
     else:
         return True
     
-print("Welcome to your bank account!")
+print("\nWelcome!")
+print("\nCaitlin's bank -------------")
+print("1) Create a new account")
+print("2) Log in to existing account")
+print("3) Leave")
+choice = input("What would you like to do? ")
+
+if choice == "1": 
+    createAccount()
+elif choice == "2": 
+    logIn()
+elif choice == "3":
+    print("Thanks for visiting!")
+else:
+    print("I didn't quite catch that. Please enter a number from above...")
+    logIn()
+
 while True:
     print("\nCaitlin's bank -------------")
     print("1) View account balance")
     print("2) Make a deposit")
     print("3) Make a withdrawal")
-    print("4) Create a new account")
-    print("5) Delete an account")
-    print("6) Modify account details")
-    print("7) Quit")
+    print("4) Delete an account")
+    print("5) Modify account details")
+    print("6) Quit")
     choice = input("What would you like to do? ")
 
     if choice == "1":
@@ -176,17 +206,15 @@ while True:
         withdrawal()
         connection.commit()
     elif choice == "4": 
-        createAccount()
-        connection.commit()
-    elif choice == "5": 
         deleteAccount()
-    elif choice == "6": 
+    elif choice == "5": 
         modifyAccount()
         connection.commit()
-    elif choice == "7":
+    elif choice == "6":
         break
     else:
         print("I didn't quite catch that. Please enter a number from above...")
+
 
 cursor.close()
 connection.close()
