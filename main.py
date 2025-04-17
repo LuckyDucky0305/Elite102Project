@@ -54,9 +54,10 @@ balanceID = 3000
 
 def viewAccount():
     cursor.execute("SELECT * FROM balance")
-    print("ID   DATE    DESC    DEPOSIT   WITHDRAWAL")
+    print("ID      DATE      AMOUNT   DESCRIPTION")
     for item in cursor:
         print(item)
+
 
 
 def viewAccountBalance():
@@ -72,7 +73,7 @@ def deposit():
         today = datetime.date.today()
         global balanceID
         balanceID += 1
-        addDeposit = "INSERT INTO balance(idBalance, date, description, deposit, withdrawal) VALUES (" + str(balanceID) + ", '" + today.strftime("%x") + "', '" + desc+"', 1, 0)"
+        addDeposit = "INSERT INTO balance(idBalance, date, amount, description) VALUES (" + str(balanceID) + ", '" + today.strftime("%x") + "', " +  deposit + ", '" + desc+"')"
         cursor.execute(addDeposit)
         global balance 
         balance += int(deposit)
@@ -80,18 +81,24 @@ def deposit():
 
 def withdrawal():
     if hasAccount():
-        withdraw = input("How much would you like to withdraw? ")
-        balance -= withdraw
+        withdrawal = input("How much would you like to withdraw? ")
+        desc = input("What would you like to add as the description for this withdrawal? ")
+        today = datetime.date.today()
+        global balanceID
+        balanceID += 1
+        addWithdrawal = "INSERT INTO balance(idBalance, date, amount, description) VALUES (" + str(balanceID) + ", '" + today.strftime("%x") + "', -" +  withdrawal + ", '" + desc+"')"
+        cursor.execute(addWithdrawal)
+        global balance 
+        balance -= int(withdrawal)
         viewAccountBalance()
 
 def createAccount():
     print("\nWelcome! To create a new account, please enter the following information... ")
+    global uName, pWord, email
     uName = input("New username: ")
     pWord = input("Password: ")
     email = input("Email: ")
     addUser = "INSERT INTO account(userName, password, email) VALUES ('" + uName + "', '" +pWord+"', '"+ email+"')"
-    print(addUser)
-    print(uName)
     cursor.execute(addUser)
     connection.commit()
     print("You've successfully created a new account!")
@@ -104,6 +111,9 @@ def deleteAccount():
 
 def modifyAccount():
     if hasAccount():
+        global uName
+        global pWord
+        global email
         print("Username: " + uName)
         # for i in pWord:
         #     password += "*"
