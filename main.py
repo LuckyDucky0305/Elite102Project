@@ -37,7 +37,7 @@ cursor = connection.cursor()
 cursor.execute("DELETE FROM account")
 cursor.execute("DELETE FROM balance")
 
-addData = "INSERT INTO account(userName, password, email) VALUES ('dogs', 'ilovedogs', 'dog@gmail.com');"
+addData = "INSERT INTO account(userName, password, email) VALUES ('dogs', 'ilovedogs', 'dog@gmail.com')"
 cursor.execute(addData)
 cursor.execute("INSERT INTO account(userName, password, email) VALUES ('LuckyDucky', 'Wong', 'lucky@gmail.com')")
 cursor.execute("INSERT INTO account(userName, password, email) VALUES ('batman', 'bat', 'bat@gmail.com')")
@@ -98,7 +98,7 @@ def createAccount():
     uName = input("New username: ")
     pWord = input("Password: ")
     email = input("Email: ")
-    addUser = "INSERT INTO account(userName, password, email) VALUES ('" + uName + "', '" +pWord+"', '"+ email+"')"
+    addUser = "INSERT INTO account(userName, password, email) VALUES ('" + uName + "', '" +pWord+"', '"+ email+"');"
     cursor.execute(addUser)
     connection.commit()
     print("You've successfully created a new account!")
@@ -130,7 +130,6 @@ def hasAccount():
     
 print("Welcome to your bank account!")
 while True:
-
     print("\nCaitlin's bank -------------")
     print("1) View account balance")
     print("2) Make a deposit")
