@@ -98,16 +98,22 @@ def createAccount():
     uName = input("New username: ")
     pWord = input("Password: ")
     email = input("Email: ")
-    addUser = "INSERT INTO account(userName, password, email) VALUES ('" + uName + "', '" +pWord+"', '"+ email+"');"
+    addUser = "INSERT INTO account(userName, password, email) VALUES ('" + uName + "', '" +pWord+"', '"+ email+"')"
     cursor.execute(addUser)
     connection.commit()
     print("You've successfully created a new account!")
 
 def deleteAccount():
     if hasAccount():
-        confirmation = input("Are you sure you want to delete your account? (y)")
-        if confirmation.upper == "Y":
-            print("Deleted")
+        confirmation = input("Are you sure you want to delete your account? You will not be able to undo this process and all of your money will be donated to the bank. (y) ")
+        if confirmation == "y":
+            global uName, pWord, email
+            cursor.execute("DELETE FROM account WHERE userName = %s AND password = %s AND email = %s", (uName, pWord, email))
+            connection.commit()
+            uName = ""
+            pWord = ""
+            email = ""
+            print("Successfully removed your account")
 
 def modifyAccount():
     if hasAccount():
@@ -120,6 +126,27 @@ def modifyAccount():
         print("Password: " + pWord)
         print("Email: " + email)
         choice = input("What would you like to modify? ")
+        if choice == "u":
+            uName = input("Enter a new username: ")  #immediately changes the global variable... change
+            mail = input("Enter your email to authorize this action: ")
+            cursor.execute("UPDATE account SET userName = '" + uName + "' WHERE email = '" + mail + "' AND password = '" + pWord + "'")
+            connection.commit()
+            print("Username changed successfully! ")
+        elif choice == "p":
+            pWord1 = input("Enter a new password: ")
+            pWord2 = input("Retype your password: ")
+            if pWord1 == pWord2:
+                pWord = pWord1
+                name = input("Enter your username to authorize this action: ")
+                cursor.execute("UPDATE account SET password = '" + pWord + "' WHERE email = '" + email + "' AND username = '" + name + "'")
+                connection.commit()                
+                print("Password changed successfully!")
+        elif choice == "e":
+            email = input("Enter a new backup email account to link your bank account to: ")             #immediately changes the global variable... change
+            passWord = input("Enter your password to authorize this action: ")
+            cursor.execute("UPDATE account SET email = '" + email + "' WHERE password = '" + passWord + "' AND username = '" + uName + "'")
+            connection.commit()
+            print("Email changed successfully! ")
 
 def hasAccount():
     if uName is None:
@@ -137,11 +164,11 @@ while True:
     print("4) Create a new account")
     print("5) Delete an account")
     print("6) Modify account details")
+    print("7) Quit")
     choice = input("What would you like to do? ")
 
     if choice == "1":
         viewAccount()
-        #connection.commit()
     elif choice == "2": 
         deposit()
         connection.commit()
@@ -153,10 +180,13 @@ while True:
         connection.commit()
     elif choice == "5": 
         deleteAccount()
-        connection.commit()
     elif choice == "6": 
         modifyAccount()
         connection.commit()
+    elif choice == "7":
+        break
+    else:
+        print("I didn't quite catch that. Please enter a number from above...")
 
 cursor.close()
 connection.close()
