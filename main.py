@@ -1,3 +1,7 @@
+#Everything seems to work now, I should have all functions
+# Next: UI (buttons!) and error-handling
+
+
 """
 import tkinter as tk
 
@@ -6,26 +10,30 @@ window = tk.Tk()
 window.title("Caitlin's Bank")
 
 # Add a label
-welcome = tk.Label(window, text="Welcome to your bank account!")
-choice1 = tk.Button(window, text="1) View account balance")
-choice2 = tk.Button(window, text="2) Make a deposit")
-choice3 = tk.Button(window, text="3) Create a new account")
-choice4 = tk.Button(window, text="4) Delete an account")
-choice5 = tk.Button(window, text="5) Modify account details")
+welcome = tk.Label(window, text="Welcome to Caitlin's bank!")
+choice1 = tk.Button(window, text="1) Log in to an existing account")
+choice2 = tk.Button(window, text="2) Create a new account")
+
+#choice1 = tk.Button(window, text="1) View account balance")
+#choice2 = tk.Button(window, text="2) Make a deposit")
+#choice3 = tk.Button(window, text="3) Create a new account")
+#choice4 = tk.Button(window, text="4) Delete an account")
+#choice5 = tk.Button(window, text="5) Modify account details")
 
 welcome.pack()
 
 # Add a button
 choice1.pack()
 choice2.pack()
-choice3.pack()
-choice4.pack()
-choice5.pack()
+#choice3.pack()
+#choice4.pack()
+#choice5.pack()
 
 # Start the Tkinter event loop
 window.mainloop()
-
 """
+
+
 import datetime
 
 import mysql.connector
@@ -34,26 +42,15 @@ connection = mysql.connector.connect(user = 'root', database = 'bankapp', passwo
 
 cursor = connection.cursor()
 
-cursor.execute("DELETE FROM account")
-cursor.execute("DELETE FROM balance")
 
-addData = "INSERT INTO account(userName, password, email) VALUES ('dogs', 'ilovedogs', 'dog@gmail.com')"
-cursor.execute(addData)
-cursor.execute("INSERT INTO account(userName, password, email) VALUES ('LuckyDucky', 'Wong', 'lucky@gmail.com')")
-cursor.execute("INSERT INTO account(userName, password, email) VALUES ('batman', 'bat', 'bat@gmail.com')")
-
-connection.commit()
-
-
-
-balance = 0
 uName = ""
 pWord = ""
 email = "" 
 balanceID = 3000
 
 def viewAccount():
-    cursor.execute("SELECT * FROM balance")
+    global uName
+    cursor.execute("SELECT idBalance, date, amount, description FROM balance WHERE username = '" + uName + "'")
     print("ID      DATE      AMOUNT   DESCRIPTION")
     for item in cursor:
         print(item)
@@ -63,7 +60,11 @@ def viewAccount():
 def viewAccountBalance():
     if hasAccount():
         print("----------------------")
-        print("Your balance: " + str(balance))
+        balance = 0
+        cursor.execute("SELECT amount FROM balance WHERE username = '" + uName + "'")
+        for item in cursor:
+            balance += float(item[0]) 
+        print("\033[92mYour balance: $" + str(balance) + "\033[0m")  # Cyan
         print("----------------------")
 
 def deposit():
@@ -72,11 +73,14 @@ def deposit():
         desc = input("What would you like to add as the description for this deposit? ")
         today = datetime.date.today()
         global balanceID
+        global uName
         balanceID += 1
-        addDeposit = "INSERT INTO balance(idBalance, date, amount, description) VALUES (" + str(balanceID) + ", '" + today.strftime("%x") + "', " +  deposit + ", '" + desc+"')"
-        cursor.execute(addDeposit)
-        global balance 
-        balance += int(deposit)
+        addDeposit = """
+            INSERT INTO balance(idBalance, date, amount, description, username)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        values = (balanceID, today.strftime("%x"), deposit, desc, uName)
+        cursor.execute(addDeposit, values)
         viewAccountBalance()
 
 def withdrawal():
@@ -86,10 +90,13 @@ def withdrawal():
         today = datetime.date.today()
         global balanceID
         balanceID += 1
-        addWithdrawal = "INSERT INTO balance(idBalance, date, amount, description) VALUES (" + str(balanceID) + ", '" + today.strftime("%x") + "', -" +  withdrawal + ", '" + desc+"')"
-        cursor.execute(addWithdrawal)
-        global balance 
-        balance -= int(withdrawal)
+        addWithdrawal = """
+            INSERT INTO balance(idBalance, date, amount, description, username)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        amount = -float(withdrawal)
+        values = (balanceID, today.strftime("%x"), amount, desc, uName)
+        cursor.execute(addWithdrawal, values)
         viewAccountBalance()
 
 def createAccount():
@@ -98,10 +105,23 @@ def createAccount():
     uName = input("New username: ")
     pWord = input("Password: ")
     email = input("Email: ")
-    addUser = "INSERT INTO account(userName, password, email) VALUES ('" + uName + "', '" +pWord+"', '"+ email+"')"
-    cursor.execute(addUser)
-    connection.commit()
-    print("You've successfully created a new account!")
+    cursor2 = connection.cursor()
+    cursor2.execute("SELECT * FROM account WHERE userName = %s", (uName, ))
+    rows = cursor.fetchall()
+    print(rows)
+    if len(rows) == 0:
+        print("Setting up a new account...")
+        addUser = "INSERT INTO account(userName, password, email) VALUES ('" + uName + "', '" +pWord+"', '"+ email+"')"
+        cursor.execute(addUser)
+        connection.commit()
+        print("You've successfully created a new account!")
+    else:
+        print("There is already an existing account with that username. Choose a new one or sign in to that account.")
+        choice = input("Create account [c] or log in [l]? ")
+        if choice == "c":
+            createAccount()
+        elif choice == "l":
+            logIn()
 
 def deleteAccount():
     if hasAccount():
@@ -156,6 +176,8 @@ def modifyAccount():
                 cursor.execute("UPDATE account SET password = '" + pWord + "' WHERE email = '" + email + "' AND username = '" + name + "'")
                 connection.commit()                
                 print("Password changed successfully!")
+            else:
+                print("Not the same password... password not changed")
         elif choice == "e":
             email = input("Enter a new backup email account to link your bank account to: ")             #immediately changes the global variable... change
             passWord = input("Enter your password to authorize this action: ")
@@ -169,24 +191,26 @@ def hasAccount():
         return False
     else:
         return True
-    
-print("\nWelcome!")
-print("\nCaitlin's bank -------------")
-print("1) Create a new account")
-print("2) Log in to existing account")
-print("3) Leave")
-choice = input("What would you like to do? ")
+def startingPage():
+    print("\nWelcome!")
+    print("\nCaitlin's bank -------------")
+    print("1) Create a new account")
+    print("2) Log in to existing account")
+    print("3) Leave")
+    choice = input("What would you like to do? ")
 
-if choice == "1": 
-    createAccount()
-elif choice == "2": 
-    logIn()
-elif choice == "3":
-    print("Thanks for visiting!")
-else:
-    print("I didn't quite catch that. Please enter a number from above...")
-    logIn()
+    if choice == "1": 
+        createAccount()
+    elif choice == "2": 
+        logIn()
+    elif choice == "3":
+        print("Thanks for visiting!")
+    else:
+        print("I didn't quite catch that. Please enter a number from above...")
+        logIn()
 
+
+startingPage()
 while True:
     print("\nCaitlin's bank -------------")
     print("1) View account balance")
@@ -194,7 +218,8 @@ while True:
     print("3) Make a withdrawal")
     print("4) Delete an account")
     print("5) Modify account details")
-    print("6) Quit")
+    print("6) Leave")
+    print("7) Back to sign in")
     choice = input("What would you like to do? ")
 
     if choice == "1":
@@ -212,6 +237,8 @@ while True:
         connection.commit()
     elif choice == "6":
         break
+    elif choice == "7":
+        startingPage()
     else:
         print("I didn't quite catch that. Please enter a number from above...")
 
