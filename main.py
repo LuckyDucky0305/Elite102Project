@@ -1,38 +1,3 @@
-#Everything seems to work now, I should have all functions
-# Next: UI (buttons!) and error-handling
-
-
-"""
-import tkinter as tk
-
-# Create the main window
-window = tk.Tk()
-window.title("Caitlin's Bank")
-
-# Add a label
-welcome = tk.Label(window, text="Welcome to Caitlin's bank!")
-choice1 = tk.Button(window, text="1) Log in to an existing account")
-choice2 = tk.Button(window, text="2) Create a new account")
-
-#choice1 = tk.Button(window, text="1) View account balance")
-#choice2 = tk.Button(window, text="2) Make a deposit")
-#choice3 = tk.Button(window, text="3) Create a new account")
-#choice4 = tk.Button(window, text="4) Delete an account")
-#choice5 = tk.Button(window, text="5) Modify account details")
-
-welcome.pack()
-
-# Add a button
-choice1.pack()
-choice2.pack()
-#choice3.pack()
-#choice4.pack()
-#choice5.pack()
-
-# Start the Tkinter event loop
-window.mainloop()
-"""
-
 
 import datetime
 
