@@ -3,7 +3,7 @@ import datetime
 
 import mysql.connector
 
-connection = mysql.connector.connect(user = 'root', database = 'bankapp', password = 'Wong2021!')
+connection = mysql.connector.connect(user = 'root', database = 'bankapp')
 
 cursor = connection.cursor()
 
@@ -70,23 +70,34 @@ def createAccount():
     uName = input("New username: ")
     pWord = input("Password: ")
     email = input("Email: ")
-    cursor2 = connection.cursor()
-    cursor2.execute("SELECT * FROM account WHERE userName = %s", (uName, ))
-    rows = cursor.fetchall()
-    print(rows)
-    if len(rows) == 0:
-        print("Setting up a new account...")
-        addUser = "INSERT INTO account(userName, password, email) VALUES ('" + uName + "', '" +pWord+"', '"+ email+"')"
-        cursor.execute(addUser)
-        connection.commit()
-        print("You've successfully created a new account!")
-    else:
-        print("There is already an existing account with that username. Choose a new one or sign in to that account.")
-        choice = input("Create account [c] or log in [l]? ")
-        if choice == "c":
-            createAccount()
-        elif choice == "l":
-            logIn()
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM account WHERE userName = %s", (uName,))
+
+        # Check if the cursor has a result set
+        if cursor.with_rows:
+            existing_user = cursor.fetchone()
+        else:
+            existing_user = None
+
+        if existing_user:
+            print("There is already an existing account with that username. Choose a new one or sign in to that account.")
+            choice = input("Create account [c] or log in [l]? ")
+            if choice == "c":
+                createAccount()
+            elif choice == "l":
+                logIn()
+        else:
+            print("Setting up a new account...")
+            addUser = "INSERT INTO account(userName, password, email) VALUES (%s, %s, %s)"
+            cursor.execute(addUser, (uName, pWord, email))
+            connection.commit()
+            print("You've successfully created a new account!")
+
+    except mysql.connector.Error as err:
+        print("Database error:", err)
+
 
 def deleteAccount():
     if hasAccount():
